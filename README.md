@@ -69,7 +69,7 @@
 **功能说明**：将 LoRA 模型的权重融合到基础模型中，生成新的合并模型。
 
 **参数设置**：
-- **operation_type**: 选择 `merge`
+- **operation_type**: 选择 `merge_lora`
 - **main_model**: 设置基础模型文件路径
 - **lora_file**: 设置 LoRA 模型文件路径
 - **lora_scale**: 设置 LoRA 权重缩放比例（默认 1.0，范围 0.0-2.0）
@@ -164,3 +164,4 @@
 - 增强日志输出信息
 
 主页：https://github.com/lyvs2012/ComfyUI-Model-Processing
+
