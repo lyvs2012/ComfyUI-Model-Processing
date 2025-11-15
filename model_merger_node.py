@@ -902,9 +902,19 @@ class ModelMergerNode:
         has_up_linear = any('.up.linear.' in key for key in lora_keys)
         has_lora_A = any('.lora_A.default.weight' in key for key in lora_keys)
         has_lora_B = any('.lora_B.default.weight' in key for key in lora_keys)
+        has_lora_A_simple = any('.lora_A.weight' in key for key in lora_keys)
+        has_lora_B_simple = any('.lora_B.weight' in key for key in lora_keys)
+        # 新增格式检测
+        has_lora_down_weight = any('.lora_down.weight' in key for key in lora_keys)
+        has_lora_dot_down = any('.lora.down.' in key for key in lora_keys)
+        has_lora_dot_down_weight = any('.lora.down.weight' in key for key in lora_keys)
+        has_lora_dot_down_proj = any('.lora.down.proj' in key for key in lora_keys)
+        has_lora_down_proj = any('.lora_down_proj' in key for key in lora_keys)
         
         # 检查是否找到任何支持的格式
-        has_any_format = has_lora_down or has_loradown or has_down_linear or has_lora_A
+        has_any_format = has_lora_down or has_loradown or has_down_linear or has_lora_A or has_lora_A_simple or \
+                         has_lora_down_weight or has_lora_dot_down or has_lora_dot_down_weight or \
+                         has_lora_dot_down_proj or has_lora_down_proj
         
         if not has_any_format:
             print("警告: LORA模型可能不是支持的格式")
@@ -915,6 +925,12 @@ class ModelMergerNode:
             print("4. _lora_down. / _lora_up.")
             print("5. down_proj / up_proj")
             print("6. .lora_A.default.weight / .lora_B.default.weight")
+            print("7. .lora_A.weight / .lora_B.weight")
+            print("8. .lora_down.weight / .lora_up.weight")
+            print("9. .lora.down. / .lora.up.")
+            print("10. .lora.down.weight / .lora.up.weight")
+            print("11. .lora.down.proj / .lora.up.proj")
+            print("12. .lora_down_proj / .lora_up_proj")
             print("\nLoRA模型前10个键示例:")
             for i, key in enumerate(list(lora_keys)[:10]):
                 print(f"  {i+1}. {key}")
@@ -929,7 +945,14 @@ class ModelMergerNode:
             ('down_proj', 'up_proj'),
             ('.loradown.', '.loraup.'),  # 小写变体
             ('.down.linear.', '.up.linear.'),
-            ('.lora_A.default.weight', '.lora_B.default.weight')  # 新格式
+            ('.lora_A.default.weight', '.lora_B.default.weight'),  # 新格式
+            ('.lora_A.weight', '.lora_B.weight'),  # 简化版新格式
+            # 新增常见格式变体
+            ('.lora_down.weight', '.lora_up.weight'),
+            ('.lora.down.', '.lora.up.'),
+            ('.lora.down.weight', '.lora.up.weight'),
+            ('.lora.down.proj', '.lora.up.proj'),
+            ('.lora_down_proj', '.lora_up_proj')
         ]
         
         for key in lora_keys:
@@ -1032,25 +1055,101 @@ class ModelMergerNode:
                 pair_format = "variant_new_format"
                 # 添加调试信息
                 print(f"  处理variant_new_format格式: 原始键={key}")
+            # 7. 简化版新格式 .lora_A.weight / .lora_B.weight
+            elif '.lora_A.weight' in key:
+                # 直接使用完整的键路径作为标识符，但分别提取A/B权重
+                base_identifier = key  # 保持原始键用于标识
+                # 确保up_key构建正确
+                up_key = key.replace('.lora_A.weight', '.lora_B.weight')
+                # 特殊处理：对于简化版新格式，我们直接使用键中的权重
+                pair_format = "variant_new_format_simple"
+                # 添加调试信息
+                print(f"  处理variant_new_format_simple格式: 原始键={key}")
+            # 8. .lora_down.weight / .lora_up.weight 格式
+            elif '.lora_down.weight' in key:
+                base_key = key.split('.lora_down.weight')[0]
+                up_key = key.replace('.lora_down.weight', '.lora_up.weight')
+                pair_format = "variant_down_up_weight"
+                # 添加调试信息
+                print(f"  处理variant_down_up_weight格式: 原始键={key}")
+            # 9. .lora.down. / .lora.up. 格式
+            elif '.lora.down.' in key:
+                base_key = key.split('.lora.down.')[0]
+                up_key = key.replace('.lora.down.', '.lora.up.')
+                pair_format = "variant_lora_dot_down_up"
+                # 添加调试信息
+                print(f"  处理variant_lora_dot_down_up格式: 原始键={key}")
+            # 10. .lora.down.weight / .lora.up.weight 格式
+            elif '.lora.down.weight' in key:
+                base_key = key.split('.lora.down.weight')[0]
+                up_key = key.replace('.lora.down.weight', '.lora.up.weight')
+                pair_format = "variant_lora_dot_down_up_weight"
+                # 添加调试信息
+                print(f"  处理variant_lora_dot_down_up_weight格式: 原始键={key}")
+            # 11. .lora.down.proj / .lora.up.proj 格式
+            elif '.lora.down.proj' in key:
+                base_key = key.split('.lora.down.proj')[0]
+                up_key = key.replace('.lora.down.proj', '.lora.up.proj')
+                pair_format = "variant_lora_dot_down_up_proj"
+                # 添加调试信息
+                print(f"  处理variant_lora_dot_down_up_proj格式: 原始键={key}")
+            # 12. .lora_down_proj / .lora_up_proj 格式
+            elif '.lora_down_proj' in key:
+                base_key = key.split('.lora_down_proj')[0]
+                up_key = key.replace('.lora_down_proj', '.lora_up_proj')
+                pair_format = "variant_lora_down_up_proj"
+                # 添加调试信息
+                print(f"  处理variant_lora_down_up_proj格式: 原始键={key}")
             else:
                 continue
             
             if up_key in lora_keys:
                 # 查找层映射，处理主模型中可能不存在完全匹配的层
-                # 对于variant_new_format格式，我们使用一个全新的映射策略
-                if pair_format == "variant_new_format":
+                # 对于variant_new_format和variant_new_format_simple格式，我们使用全新的映射策略
+                if pair_format == "variant_new_format" or pair_format == "variant_new_format_simple" or \
+                   pair_format == "variant_down_up_weight" or pair_format == "variant_lora_dot_down_up" or \
+                   pair_format == "variant_lora_dot_down_up_weight" or pair_format == "variant_lora_dot_down_up_proj" or \
+                   pair_format == "variant_lora_down_up_proj":
                     # 全新的映射策略：直接查找主模型中与键路径相似的权重
-                    print(f"  应用全新的variant_new_format映射策略...")
+                    print(f"  应用全新的{pair_format}映射策略...")
                     mapped_key = None
                     
                     # 1. 首先尝试直接匹配原始键（不进行任何替换）
                     if key in main_state_dict:
                         mapped_key = key
                         print(f"  - 直接匹配成功: {key}")
-                    # 2. 尝试移除.lora_A.default.weight后缀
+                    # 2. 根据格式类型移除不同的后缀
                     else:
-                        # 提取可能的层名（移除.lora_A.default.weight）
-                        potential_layer = key.replace('.lora_A.default.weight', '')
+                        # 根据不同的格式类型移除对应的后缀
+                        if pair_format == "variant_new_format":
+                            # 提取可能的层名（移除.lora_A.default.weight）
+                            potential_layer = key.replace('.lora_A.default.weight', '')
+                            suffix_to_remove = '.lora_A.default.weight'
+                        elif pair_format == "variant_new_format_simple":
+                            # 提取可能的层名（移除.lora_A.weight）
+                            potential_layer = key.replace('.lora_A.weight', '')
+                            suffix_to_remove = '.lora_A.weight'
+                        elif pair_format == "variant_down_up_weight":
+                            # 提取可能的层名（移除.lora_down.weight）
+                            potential_layer = key.replace('.lora_down.weight', '')
+                            suffix_to_remove = '.lora_down.weight'
+                        elif pair_format == "variant_lora_dot_down_up":
+                            # 提取可能的层名（移除.lora.down.）
+                            potential_layer = key.replace('.lora.down.', '')
+                            suffix_to_remove = '.lora.down.'
+                        elif pair_format == "variant_lora_dot_down_up_weight":
+                            # 提取可能的层名（移除.lora.down.weight）
+                            potential_layer = key.replace('.lora.down.weight', '')
+                            suffix_to_remove = '.lora.down.weight'
+                        elif pair_format == "variant_lora_dot_down_up_proj":
+                            # 提取可能的层名（移除.lora.down.proj）
+                            potential_layer = key.replace('.lora.down.proj', '')
+                            suffix_to_remove = '.lora.down.proj'
+                        elif pair_format == "variant_lora_down_up_proj":
+                            # 提取可能的层名（移除.lora_down_proj）
+                            potential_layer = key.replace('.lora_down_proj', '')
+                            suffix_to_remove = '.lora_down_proj'
+                        
                         print(f"  - 尝试潜在层名: {potential_layer}")
                         
                         # 尝试多种可能的权重名称变体
@@ -2094,37 +2193,108 @@ class ModelMergerNode:
                                     merged_dict[mapped_key] = main_weight + delta
                                     applied_layers += 1
                                 else:
+                                    # 继续尝试其他形状适配策略
+                                    pass
                                     # 处理2D矩阵之间的行数不匹配情况
-                                    if len(main_shape) == 2 and len(delta.shape) == 2 and main_shape[1] == delta.shape[1]:
-                                        print(f"  - 检测到2D矩阵列数匹配但行数不匹配，尝试行裁剪或扩展...")
-                                        try:
-                                            if delta.shape[0] > main_shape[0]:
-                                                # 如果delta行数多于主模型，裁剪delta的行
-                                                print(f"  - delta行数({delta.shape[0]})多于主模型({main_shape[0]})，尝试裁剪行")
-                                                # 方案1: 取前N行（N=主模型行数）
-                                                delta_cropped = delta[:main_shape[0], :]
-                                                print(f"  - 裁剪后delta形状: {delta_cropped.shape}")
-                                                delta = delta_cropped
-                                                shape_matched = True
-                                            elif delta.shape[0] < main_shape[0]:
-                                                # 如果delta行数少于主模型，尝试扩展delta
-                                                print(f"  - delta行数({delta.shape[0]})少于主模型({main_shape[0]})，尝试扩展行")
-                                                # 创建与主模型相同形状的零张量
-                                                delta_extended = torch.zeros_like(main_weight, dtype=delta.dtype, device=delta.device)
-                                                # 将delta填充到前几行
-                                                delta_extended[:delta.shape[0], :] = delta
-                                                print(f"  - 扩展后delta形状: {delta_extended.shape}")
-                                                delta = delta_extended
+                                if len(main_shape) == 2 and len(delta.shape) == 2 and main_shape[1] == delta.shape[1]:
+                                    print(f"  - 检测到2D矩阵列数匹配但行数不匹配，尝试行裁剪或扩展...")
+                                    try:
+                                        if delta.shape[0] > main_shape[0]:
+                                            # 如果delta行数多于主模型，裁剪delta的行
+                                            print(f"  - delta行数({delta.shape[0]})多于主模型({main_shape[0]})，尝试裁剪行")
+                                            # 方案1: 取前N行（N=主模型行数）
+                                            delta_cropped = delta[:main_shape[0], :]
+                                            print(f"  - 裁剪后delta形状: {delta_cropped.shape}")
+                                            delta = delta_cropped
+                                            shape_matched = True
+                                        elif delta.shape[0] < main_shape[0]:
+                                            # 如果delta行数少于主模型，尝试扩展delta
+                                            print(f"  - delta行数({delta.shape[0]})少于主模型({main_shape[0]})，尝试扩展行")
+                                            # 创建与主模型相同形状的零张量
+                                            delta_extended = torch.zeros_like(main_weight, dtype=delta.dtype, device=delta.device)
+                                            # 将delta填充到前几行
+                                            delta_extended[:delta.shape[0], :] = delta
+                                            print(f"  - 扩展后delta形状: {delta_extended.shape}")
+                                            delta = delta_extended
+                                            shape_matched = True
+                                        
+                                        if shape_matched:
+                                            print(f"  - 2D矩阵行适配成功，应用权重更新")
+                                            delta = delta.to(main_weight.dtype)
+                                            merged_dict[mapped_key] = main_weight + delta
+                                            applied_layers += 1
+                                            continue
+                                    except Exception as e:
+                                        print(f"  - 2D矩阵行适配失败: {str(e)}")
+                                
+                                # 新增：处理2D矩阵之间的列数不匹配情况
+                                if len(main_shape) == 2 and len(delta.shape) == 2 and main_shape[0] == delta.shape[0]:
+                                    print(f"  - 检测到2D矩阵行数匹配但列数不匹配，尝试列裁剪或扩展...")
+                                    try:
+                                        if delta.shape[1] > main_shape[1]:
+                                            # 如果delta列数多于主模型，裁剪delta的列
+                                            print(f"  - delta列数({delta.shape[1]})多于主模型({main_shape[1]})，尝试裁剪列")
+                                            # 方案1: 取前N列（N=主模型列数）
+                                            delta_cropped = delta[:, :main_shape[1]]
+                                            print(f"  - 裁剪后delta形状: {delta_cropped.shape}")
+                                            delta = delta_cropped
+                                            shape_matched = True
+                                        elif delta.shape[1] < main_shape[1]:
+                                            # 如果delta列数少于主模型，尝试扩展delta
+                                            print(f"  - delta列数({delta.shape[1]})少于主模型({main_shape[1]})，尝试扩展列")
+                                            # 创建与主模型相同形状的零张量
+                                            delta_extended = torch.zeros_like(main_weight, dtype=delta.dtype, device=delta.device)
+                                            # 将delta填充到前几列
+                                            delta_extended[:, :delta.shape[1]] = delta
+                                            print(f"  - 扩展后delta形状: {delta_extended.shape}")
+                                            delta = delta_extended
+                                            shape_matched = True
+                                        
+                                        if shape_matched:
+                                            print(f"  - 2D矩阵列适配成功，应用权重更新")
+                                            delta = delta.to(main_weight.dtype)
+                                            merged_dict[mapped_key] = main_weight + delta
+                                            applied_layers += 1
+                                            continue
+                                    except Exception as e:
+                                        print(f"  - 2D矩阵列适配失败: {str(e)}")
+                                
+                                # 新增：处理2D矩阵行列都不匹配但比例相似的情况
+                                if len(main_shape) == 2 and len(delta.shape) == 2:
+                                    print(f"  - 尝试高级2D矩阵形状适配策略...")
+                                    try:
+                                        # 检查是否可以通过转置+裁剪/扩展进行适配
+                                        if delta.shape[1] == main_shape[0] and delta.shape[0] == main_shape[1]:
+                                            # 完全转置匹配
+                                            print(f"  - 检测到形状可通过转置完全匹配: {delta.shape} -> {main_shape}")
+                                            delta = delta.T
+                                            print(f"  - 转置后delta形状: {delta.shape}")
+                                            delta = delta.to(main_weight.dtype)
+                                            merged_dict[mapped_key] = main_weight + delta
+                                            applied_layers += 1
+                                            continue
+                                        
+                                        # 检查列数比例，如果delta列数是主模型的整数倍，尝试均匀采样列
+                                        if delta.shape[1] > main_shape[1] and (delta.shape[1] % main_shape[1] == 0 or main_shape[1] % delta.shape[1] == 0):
+                                            scale_factor = max(delta.shape[1] // main_shape[1], main_shape[1] // delta.shape[1])
+                                            print(f"  - 检测到列数比例关系(缩放因子: {scale_factor})，尝试智能列采样...")
+                                            
+                                            if delta.shape[1] > main_shape[1]:
+                                                # delta列数更多，进行采样
+                                                indices = torch.linspace(0, delta.shape[1] - 1, steps=main_shape[1], dtype=torch.long, device=delta.device)
+                                                delta_resampled = delta[:, indices]
+                                                print(f"  - 列采样后delta形状: {delta_resampled.shape}")
+                                                delta = delta_resampled
                                                 shape_matched = True
                                             
                                             if shape_matched:
-                                                print(f"  - 2D矩阵行适配成功，应用权重更新")
+                                                print(f"  - 智能列采样适配成功，应用权重更新")
                                                 delta = delta.to(main_weight.dtype)
                                                 merged_dict[mapped_key] = main_weight + delta
                                                 applied_layers += 1
                                                 continue
-                                        except Exception as e:
-                                            print(f"  - 2D矩阵行适配失败: {str(e)}")
+                                    except Exception as e:
+                                        print(f"  - 高级2D矩阵适配失败: {str(e)}")
                                     
                                     # 最后尝试：如果元素数量匹配但形状不同，强制重塑
                                     try:
