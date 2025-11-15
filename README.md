@@ -1,4 +1,4 @@
-# ComfyUI 模型合并插件
+# ComfyUI 模型处理器
 
 这是一个功能强大的 ComfyUI 插件，支持模型合并、分片模型融合、LoRA 模型融合和模型量化等多种功能，为 Stable Diffusion 模型管理提供全面的解决方案。
 
@@ -164,3 +164,4 @@
 - 增强日志输出信息
 
 主页：https://github.com/lyvs2012/ComfyUI-Model-Processing
+
