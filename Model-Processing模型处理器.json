@@ -23,7 +23,7 @@
       "title": "LoRA 模型融合.",
       "properties": {},
       "widgets_values": [
-        "\n\n**功能说明**：将 LoRA 模型的权重融合到基础模型中，生成新的合并模型。\n\n**参数设置**：\n- **operation_type**: 选择 `merge`\n- **main_model**: 设置基础模型文件路径\n- **lora_file**: 设置 LoRA 模型文件路径\n- **lora_scale**: 设置 LoRA 权重缩放比例（默认 1.0，范围 0.0-2.0）\n- **output_file**: 设置输出文件名\n- **output_directory**: 设置输出目录\n- **quantize_bits**: 选择是否量化输出模型\n\n**使用技巧**：\n- 使用较低的 lora_scale（如 0.7-0.9）可以获得更自然的效果\n- 某些 LoRA 可能在特定的缩放比例下效果最佳，建议尝试不同的值"
+        "\n\n**功能说明**：将 LoRA 模型的权重融合到基础模型中，生成新的合并模型。\n\n**参数设置**：\n- **operation_type**: 选择 `merge_lora`\n- **main_model**: 设置基础模型文件路径\n- **lora_file**: 设置 LoRA 模型文件路径\n- **lora_scale**: 设置 LoRA 权重缩放比例（默认 1.0，范围 0.0-2.0）\n- **output_file**: 设置输出文件名\n- **output_directory**: 设置输出目录\n- **quantize_bits**: 选择是否量化输出模型\n\n**使用技巧**：\n- 使用较低的 lora_scale（如 0.7-0.9）可以获得更自然的效果\n- 某些 LoRA 可能在特定的缩放比例下效果最佳，建议尝试不同的值"
       ],
       "color": "#432",
       "bgcolor": "#653"
