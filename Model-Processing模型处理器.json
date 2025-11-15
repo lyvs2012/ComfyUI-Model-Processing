@@ -1,0 +1,238 @@
+{
+  "id": "21abaef8-de83-43be-a5b2-3f8ee22d2ab3",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 8,
+      "type": "MarkdownNote",
+      "pos": [
+        1601.0297441085588,
+        -89.58750215931707
+      ],
+      "size": [
+        372.037391626419,
+        261.1940676069048
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "LoRA 模型融合.",
+      "properties": {},
+      "widgets_values": [
+        "\n\n**功能说明**：将 LoRA 模型的权重融合到基础模型中，生成新的合并模型。\n\n**参数设置**：\n- **operation_type**: 选择 `merge`\n- **main_model**: 设置基础模型文件路径\n- **lora_file**: 设置 LoRA 模型文件路径\n- **lora_scale**: 设置 LoRA 权重缩放比例（默认 1.0，范围 0.0-2.0）\n- **output_file**: 设置输出文件名\n- **output_directory**: 设置输出目录\n- **quantize_bits**: 选择是否量化输出模型\n\n**使用技巧**：\n- 使用较低的 lora_scale（如 0.7-0.9）可以获得更自然的效果\n- 某些 LoRA 可能在特定的缩放比例下效果最佳，建议尝试不同的值"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        765.1021053955736,
+        -93.61081101043678
+      ],
+      "size": [
+        396.6821754496199,
+        288.16667613539477
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "基本模型合并.",
+      "properties": {},
+      "widgets_values": [
+        "\n\n**功能说明**：合并多个完整的模型文件。\n\n**参数设置**：\n- **operation_type**: 选择 `merge`\n- **main_model**: 留空\n- **model_files**: 输入模型文件路径，每行一个文件路径\n- **output_file**: 设置合并后的模型文件名（如 `merged_model.safetensors`）\n- **output_directory**: 设置输出目录路径\n- **merge_mode**: 选择合并模式（`update` 或 `replace`）\n- **quantize_bits**: 选择量化方式（`none` 表示不量化）\n\n**使用步骤**：\n1. 在 ComfyUI 中，从 \"模型工具\" 类别中找到 \"ModelMergerNode\" 节点\n2. 设置上述参数\n3. 点击 \"Queue Prompt\" 运行\n4. 查看控制台输出了解合并进度"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 7,
+      "type": "MarkdownNote",
+      "pos": [
+        758.9985550652103,
+        242.13522566980683
+      ],
+      "size": [
+        407.143250036141,
+        323.31965650271394
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "分片模型融合.",
+      "properties": {},
+      "widgets_values": [
+        "\n\n**功能说明**：自动检测并合并多分片模型文件，如 Hugging Face 下载的大型模型。\n\n**参数设置**：\n- **operation_type**: 选择 `merge`\n- **main_model**: 留空\n- **model_files**: 只需提供第一个分片文件路径（如 `diffusion_pytorch_model-00001-of-00005.safetensors`）\n- **output_file**: 设置输出文件名\n- **output_directory**: 设置输出目录\n- **use_sharded_processing**: 设为 `True`\n- **shard_size_mb**: 设置分片大小（建议值：512-4096，单位 MB）\n- **auto_adjust_shard**: 设为 `True`（自动根据可用内存调整分片大小）\n\n**自动检测机制**：\n插件会自动从第一个分片文件名中提取信息，生成并查找所有其他分片文件。例如，提供第一个分片后，系统会自动查找并处理：\n- diffusion_pytorch_model-00002-of-00005.safetensors\n- diffusion_pytorch_model-00003-of-00005.safetensors\n- diffusion_pytorch_model-00004-of-00005.safetensors\n- diffusion_pytorch_model-00005-of-00005.safetensors"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 9,
+      "type": "MarkdownNote",
+      "pos": [
+        1611.527284221998,
+        223.18695192837095
+      ],
+      "size": [
+        313.02185193200773,
+        332.68750167298623
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "模型量化.",
+      "properties": {},
+      "widgets_values": [
+        "模型量化\n\n**功能说明**：减小模型文件体积，适合在显存较小的设备上使用。\n\n**参数设置**：\n- **operation_type**: 选择 `quantize`\n- **main_model**: 设置需要量化的模型文件路径\n- **output_file**: 设置输出文件名\n- **output_directory**: 设置输出目录\n- **quantize_bits**: 选择量化方式：\n  - `none`: 不量化\n  - `4bit`: 4位量化，体积最小\n  - `8bit`: 8位量化，平衡体积和质量\n  - `fp8`: FP8 量化，保持较高精度的同时减小体积\n\n**量化效果对比**：\n- 4bit 量化：体积减小约 75%，推理速度可能略有下降\n- 8bit 量化：体积减小约 50%，推理速度影响较小\n- FP8 量化：体积减小约 50%，精度保持较好\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 10,
+      "type": "MarkdownNote",
+      "pos": [
+        1152.4872579686012,
+        -328.79747851128445
+      ],
+      "size": [
+        463.82154063374367,
+        191.5289654955846
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "高级功能.",
+      "properties": {},
+      "widgets_values": [
+        "高级功能\n\n### 1. 合并模式说明\n\n- **update 模式**：按顺序合并所有模型，后一个模型的权重会覆盖前一个模型相同层的权重\n- **replace 模式**：使用最后一个模型完全替换之前的合并结果\n\n### 2. 分片大小优化\n\n- **手动设置**：通过 `shard_size_mb` 参数设置分片大小\n- **自动优化**：启用 `auto_adjust_shard` 后，系统会根据可用内存自动调整最佳分片大小\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "easy showAnything",
+      "pos": [
+        1189.2831129934025,
+        404.6255073960762
+      ],
+      "size": [
+        257.45619150613925,
+        102.40354204768289
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "输入任何",
+          "name": "anything",
+          "shape": 7,
+          "type": "*",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "76b5896f089d5b4f7619559cf5f7fc0560e3dc40",
+        "Node name for S&R": "easy showAnything"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 11,
+      "type": "ModelMergerNode",
+      "pos": [
+        1183.5285554573238,
+        -78.75037948173383
+      ],
+      "size": [
+        400,
+        400
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "output_file_path",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "lyvs2012/Model-Merger",
+        "ver": "221578fc63ab65c5234f83bc49876636e10bd646",
+        "Node name for S&R": "ModelMergerNode"
+      },
+      "widgets_values": [
+        "merge",
+        "",
+        "merged_model.safetensors",
+        "",
+        "update",
+        true,
+        512,
+        true,
+        "none",
+        "",
+        1,
+        "",
+        true,
+        false
+      ]
+    }
+  ],
+  "links": [
+    [
+      2,
+      11,
+      0,
+      2,
+      0,
+      "*"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0610764609500014,
+      "offset": [
+        -490.83577878226583,
+        400.12213029288307
+      ]
+    },
+    "frontendVersion": "1.28.8",
+    "VHS_latentpreview": true,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
